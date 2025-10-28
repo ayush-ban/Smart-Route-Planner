@@ -1,0 +1,52 @@
+# streamlit + ngrok setup
+NGROK_AUTH_TOKEN = "34hYKzupYXQEKWSJH82aGJdYKha_7Ggi3PJmxj9gND2DccU72"  
+
+# # installing dependencies
+# !pip install streamlit pyngrok -q
+
+import time
+import subprocess
+import sys
+from pyngrok import ngrok
+
+# authenticating ngrok
+if not NGROK_AUTH_TOKEN:
+    print(" Please add ngrok auth token first.")
+    sys.exit(0)
+else:
+    ngrok.set_auth_token(NGROK_AUTH_TOKEN)
+
+# verifying if streamlit file exists
+APP_FILE = "smart_route_planner.py"
+
+try:
+    open(APP_FILE).close()
+except FileNotFoundError:
+    print(f"{APP_FILE} not found. Please upload it to your Colab working directory.")
+    sys.exit(0)
+
+# killing old tunnels and start streamlit
+ngrok.kill()
+
+print("launching streamlit")
+process = subprocess.Popen(["streamlit", "run", APP_FILE, "--server.port", "8501"])
+
+# waiting for streamlit to start
+time.sleep(8)
+
+# connecting ngrok to streamlit
+public_url = ngrok.connect(8501)
+print("\n" + "=" * 60)
+print("streamlit is LIVE!")
+print("url:", public_url)
+print("=" * 60)
+
+
+try:
+    print("\nKeep this cell running to keep your app alive.")
+    while True:
+        time.sleep(5)
+except KeyboardInterrupt:
+    print("🔴 Stopping Streamlit and closing ngrok...")
+    process.terminate()
+    ngrok.kill()
